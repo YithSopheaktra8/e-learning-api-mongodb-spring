@@ -26,14 +26,14 @@ public class Course {
     private Double price;
     private Double discount;
     private Boolean isPaid;
-    private Boolean IsDraft;
+    private Boolean isDraft;
     private String thumbnail;
     private String categoryName;
     private String instructorName;
+    private Boolean isDeleted;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @DocumentReference
     private List<Section> sections;
 
 }

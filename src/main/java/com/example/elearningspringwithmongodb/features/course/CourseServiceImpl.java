@@ -12,14 +12,17 @@ import com.example.elearningspringwithmongodb.mapper.SectionMapper;
 import com.example.elearningspringwithmongodb.mapper.VideoMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,8 +34,6 @@ public class CourseServiceImpl implements CourseService {
     private final CategoryRepository categoryRepository;
     private final SectionMapper sectionMapper;
     private final VideoMapper videoMapper;
-    private final SectionRepository sectionRepository;
-    private final VideoRepository videoRepository;
 
 
     @Override
@@ -42,7 +43,7 @@ public class CourseServiceImpl implements CourseService {
         course.setCreatedAt(LocalDateTime.now());
         course.setUpdatedAt(LocalDateTime.now());
         course.setIsDraft(true);
-        course.setIsPaid(false);
+        course.setIsDraft(false);
         course.setDiscount(0.0);
         course.setThumbnail("https://localhost:8080/"+courseCreateRequest.thumbnail());
         course.setInstructorName("YITH SOPHEAKTRA");
@@ -64,7 +65,7 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public SectionCreateResponse addCourseToSection(String courseId, SectionCreateRequest sectionCreateRequest) {
 
-        Course course = courseRepository.findById(courseId)
+        Course course = courseRepository.findCourseById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         String.format("Course with id %s not found", courseId)
@@ -72,35 +73,216 @@ public class CourseServiceImpl implements CourseService {
 
         Section section = sectionMapper.fromSectionCreateRequest(sectionCreateRequest);
 
-        if(sectionCreateRequest.videos() != null){
-            Video video = videoMapper.fromVideoCreateRequest(sectionCreateRequest.videos().get(0));
-            video = videoRepository.save(video);
-            section.setVideos(List.of(video));
-        }else{
-            section.setVideos(new ArrayList<>());
+        if(course.getSections() == null){
+            course.setSections(new ArrayList<>());
         }
 
-        section.setCourse(course);
-        sectionRepository.save(section);
+        course.getSections().add(section);
 
-        return sectionMapper.fromSectionToSectionCreateResponse(section);
+        courseRepository.save(course);
+
+        return sectionMapper.toSectionCreateResponse(section);
     }
 
     @Override
     public VideoCreateResponse addVideoToSection(String courseId, VideoCreateRequest videoCreateRequest) {
-        return null;
+
+        Course course = courseRepository.findCourseById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Course with id %s not found", courseId)
+                ));
+
+        Section section = course.getSections().stream()
+                .filter(s -> s.getOrderNo().equals(videoCreateRequest.sectionOrderNo()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Section with id %s not found", videoCreateRequest.sectionOrderNo())
+                ));
+
+        Video video = Video.builder()
+                .orderSectionNo(videoCreateRequest.sectionOrderNo())
+                .fileName(videoCreateRequest.fileName())
+                .title(videoCreateRequest.title())
+                .orderNo(videoCreateRequest.orderNo())
+                .build();
+
+        if(section.getVideos() == null){
+            section.setVideos(new ArrayList<>());
+        }
+
+        section.getVideos().add(video);
+
+        courseRepository.save(course);
+
+        return videoMapper.fromVideoToVideoCreateResponse(video);
     }
 
-//    @Override
-//    public VideoCreateResponse addVideoToSection(String courseId, VideoCreateRequest videoCreateRequest) {
-//
-//        Course course = courseRepository.findById(courseId)
-//                .orElseThrow(() -> new ResponseStatusException(
-//                        HttpStatus.NOT_FOUND,
-//                        String.format("Course with id %s not found", courseId)
-//                ));
-//
-//
-//        return videoMapper.fromVideoToVideoCreateResponse(video);
-//    }
+    @Override
+    public Page<?> getCourseList(Integer page, Integer size, CourseBaseResponse.ResponseType responseType) {
+
+        List<Course> courses = courseRepository.findAll();
+
+        List<?> processedCourses = switch (responseType) {
+            case SNIPPET -> courses.stream()
+                    .map(courseMapper::toSnippetResponse)
+                    .collect(Collectors.toList());
+            case CONTENT_DETAIL -> courses.stream()
+                    .map(courseMapper::toDetailResponse)
+                    .collect(Collectors.toList());
+            default -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format("Response type %s not supported", responseType)
+            );
+        };
+
+        int start = (int) PageRequest.of(page, size).getOffset();
+        int end = Math.min((start + size), processedCourses.size());
+
+        return new PageImpl<>(processedCourses.subList(start, end), PageRequest.of(page, size), processedCourses.size());
+    }
+
+    @Override
+    public void updateCourse(String courseId, CourseUpdateRequest courseUpdateRequest) {
+
+        Course course = courseRepository.findCourseById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Course with id %s not found", courseId)
+                ));
+
+        courseMapper.updateCourseFromCourseUpdateRequest(courseUpdateRequest, course);
+
+        courseRepository.save(course);
+    }
+
+    @Override
+    public void deleteCourse(String courseId) {
+
+        Course course = courseRepository.findCourseById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Course with id %s not found", courseId)
+                ));
+
+        courseRepository.delete(course);
+
+
+    }
+
+    @Override
+    public void visibilityCourse(String courseId, Boolean visibility) {
+
+            Course course = courseRepository.findCourseById(courseId)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            String.format("Course with id %s not found", courseId)
+                    ));
+
+            course.setIsDraft(visibility);
+
+            courseRepository.save(course);
+    }
+
+    @Override
+    public void updateIsPaid(String courseId, Boolean isPaid) {
+
+        Course course = courseRepository.findCourseById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Course with id %s not found", courseId)
+                ));
+
+        course.setIsPaid(isPaid);
+
+    }
+
+    @Override
+    public void updateThumbnail(String courseId, String thumbnail) {
+
+            Course course = courseRepository.findCourseById(courseId)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            String.format("Course with id %s not found", courseId)
+                    ));
+
+            course.setThumbnail(thumbnail);
+    }
+
+    @Override
+    public void enableCourse(String courseId) {
+
+        Course course = courseRepository.findCourseById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        String.format("Course with id %s not found", courseId)
+                ));
+
+        course.setIsDeleted(false);
+    }
+
+    @Override
+    public void disableCourse(String courseId) {
+
+            Course course = courseRepository.findCourseById(courseId)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            String.format("Course with id %s not found", courseId)
+                    ));
+
+            course.setIsDeleted(true);
+    }
+
+    @Override
+    public Page<?> getPrivateCourseList(Integer page, Integer size, CourseBaseResponse.ResponseType responseType) {
+
+        List<Course> courses = courseRepository.findAllByIsDraftIsTrueAndIsDeletedIsFalse();
+
+        List<?> processedCourses = switch (responseType) {
+            case SNIPPET -> courses.stream()
+                    .map(courseMapper::toSnippetResponse)
+                    .collect(Collectors.toList());
+            case CONTENT_DETAIL -> courses.stream()
+                    .map(courseMapper::toDetailResponse)
+                    .collect(Collectors.toList());
+            default -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format("Response type %s not supported", responseType)
+            );
+        };
+
+        int start = (int) PageRequest.of(page, size).getOffset();
+        int end = Math.min((start + size), processedCourses.size());
+
+        return new PageImpl<>(processedCourses.subList(start, end), PageRequest.of(page, size), processedCourses.size());
+
+    }
+
+    @Override
+    public Page<?> getPublicCourseList(Integer page, Integer size, CourseBaseResponse.ResponseType responseType) {
+
+
+        List<Course> courses = courseRepository.findAllByIsDraftIsFalseAndIsDeletedIsFalse();
+
+        List<?> processedCourses = switch (responseType) {
+            case SNIPPET -> courses.stream()
+                    .map(courseMapper::toSnippetResponse)
+                    .collect(Collectors.toList());
+            case CONTENT_DETAIL -> courses.stream()
+                    .map(courseMapper::toDetailResponse)
+                    .collect(Collectors.toList());
+            default -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    String.format("Response type %s not supported", responseType)
+            );
+        };
+
+        int start = (int) PageRequest.of(page, size).getOffset();
+        int end = Math.min((start + size), processedCourses.size());
+
+        return new PageImpl<>(processedCourses.subList(start, end), PageRequest.of(page, size), processedCourses.size());
+    }
+
+
 }

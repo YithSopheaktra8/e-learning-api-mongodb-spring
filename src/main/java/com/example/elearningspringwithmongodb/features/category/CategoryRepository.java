@@ -10,7 +10,7 @@ public interface CategoryRepository extends MongoRepository<Category, String> {
 
     Optional<Category> findCategoryById(String id);
 
-    List<Category> findAllByIsEnabledIsTrue();
+    List<Category> findAllByIsDeletedIsTrue();
 
     Optional<Category> findCategoryByNameEqualsIgnoreCase(String name);
 

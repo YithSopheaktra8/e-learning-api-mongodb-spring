@@ -16,5 +16,5 @@ public class Category {
     private String id;
     private String name;
     private String icon;
-    private Boolean isEnabled;
+    private Boolean isDeleted;
 }

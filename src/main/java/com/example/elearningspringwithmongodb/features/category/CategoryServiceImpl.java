@@ -24,7 +24,7 @@ public class CategoryServiceImpl implements CategoryService{
     @Override
     public void createCategory(CategoryCreateRequest request) {
         Category category = categoryMapper.fromCategoryCreateRequest(request);
-        category.setIsEnabled(true);
+        category.setIsDeleted(false);
         category.setIcon("https://localhost:8080/"+request.icon());
         categoryRepository.insert(category);
     }
@@ -57,7 +57,7 @@ public class CategoryServiceImpl implements CategoryService{
     @Override
     public List<CategoryResponse> getAllCategories() {
 
-        return categoryMapper.toCategoryResponseList(categoryRepository.findAllByIsEnabledIsTrue());
+        return categoryMapper.toCategoryResponseList(categoryRepository.findAllByIsDeletedIsTrue());
     }
 
     @Override
@@ -79,7 +79,7 @@ public class CategoryServiceImpl implements CategoryService{
                         "Category not found"
                 ));
 
-        category.setIsEnabled(true);
+        category.setIsDeleted(true);
 
         categoryRepository.save(category);
     }
@@ -92,7 +92,7 @@ public class CategoryServiceImpl implements CategoryService{
                         "Category not found"
                 ));
 
-        category.setIsEnabled(false);
+        category.setIsDeleted(false);
 
         categoryRepository.save(category);
     }

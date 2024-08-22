@@ -5,11 +5,11 @@ import com.example.elearningspringwithmongodb.features.course.dto.SectionCreateR
 import com.example.elearningspringwithmongodb.features.course.dto.SectionCreateResponse;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring", uses = {VideoMapper.class})
+@Mapper(componentModel = "spring")
 public interface SectionMapper {
 
     Section fromSectionCreateRequest(SectionCreateRequest sectionCreateRequest);
 
-    SectionCreateResponse fromSectionToSectionCreateResponse(Section section);
+    SectionCreateResponse toSectionCreateResponse(Section section);
 
 }

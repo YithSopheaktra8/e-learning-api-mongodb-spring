@@ -1,6 +1,7 @@
 package com.example.elearningspringwithmongodb.features.course;
 
 import com.example.elearningspringwithmongodb.features.course.dto.*;
+import org.springframework.data.domain.Page;
 
 public interface CourseService {
 
@@ -9,4 +10,24 @@ public interface CourseService {
     SectionCreateResponse addCourseToSection(String courseId, SectionCreateRequest sectionCreateRequest);
 
     VideoCreateResponse addVideoToSection(String courseId, VideoCreateRequest videoCreateRequest);
+
+    Page<?> getCourseList(Integer page, Integer size, CourseBaseResponse.ResponseType responseType);
+
+    void updateCourse(String courseId, CourseUpdateRequest courseUpdateRequest);
+
+    void deleteCourse(String courseId);
+
+    void visibilityCourse(String courseId, Boolean visibility);
+
+    void updateIsPaid(String courseId, Boolean isPaid);
+
+    void updateThumbnail(String courseId, String thumbnail);
+
+    void enableCourse(String courseId);
+
+    void disableCourse(String courseId);
+
+    Page<?> getPrivateCourseList(Integer page, Integer size, CourseBaseResponse.ResponseType responseType);
+
+    Page<?> getPublicCourseList(Integer page, Integer size, CourseBaseResponse.ResponseType responseType);
 }
