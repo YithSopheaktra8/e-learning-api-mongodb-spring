@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: e-learning-spring-with-mongodb
+  data:
+    mongodb:
+      uri: mongodb://root:root@localhost:27017/e_learningDB?authSource=admin
+
+springdoc:
+  api-docs:
+    path: /api-doc
+
