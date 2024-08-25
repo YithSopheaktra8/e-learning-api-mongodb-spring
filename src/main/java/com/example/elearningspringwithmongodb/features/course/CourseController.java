@@ -101,4 +101,20 @@ public class CourseController {
         return courseService.getPublicCourseList(page, size, responseType);
     }
 
+    @GetMapping("/free")
+    public Page<?> getFreeCourseList(@RequestParam(defaultValue = "0") Integer page,
+                                     @RequestParam(defaultValue = "10") Integer size,
+                                     @RequestParam(defaultValue = "SNIPPET") CourseBaseResponse.ResponseType responseType){
+        return courseService.getFreeCourseList(page, size, responseType);
+    }
+
+    @GetMapping("/filter")
+    public Page<CourseSnippet> search(@RequestParam(defaultValue = "0") int page,
+                                      @RequestParam(defaultValue = "10") int size,
+                                      @RequestParam(required = false) String filterAnd,
+                                      @RequestParam(required = false) String filterOr,
+                                      @RequestParam(required = false) String orders){
+        return courseService.search(page, size, filterAnd, filterOr, orders);
+    }
+
 }

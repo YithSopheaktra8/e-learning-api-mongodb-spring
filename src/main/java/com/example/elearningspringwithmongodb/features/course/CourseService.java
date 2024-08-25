@@ -1,5 +1,6 @@
 package com.example.elearningspringwithmongodb.features.course;
 
+import com.example.elearningspringwithmongodb.domain.Course;
 import com.example.elearningspringwithmongodb.features.course.dto.*;
 import org.springframework.data.domain.Page;
 
@@ -27,7 +28,12 @@ public interface CourseService {
 
     void disableCourse(String courseId);
 
+    Page<?> getFreeCourseList(Integer page, Integer size, CourseBaseResponse.ResponseType responseType);
+
     Page<?> getPrivateCourseList(Integer page, Integer size, CourseBaseResponse.ResponseType responseType);
 
     Page<?> getPublicCourseList(Integer page, Integer size, CourseBaseResponse.ResponseType responseType);
+
+    Page<CourseSnippet> search(int page, int size, String filterAnd, String filterOr, String orders);
+
 }

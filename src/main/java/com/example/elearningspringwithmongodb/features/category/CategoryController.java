@@ -4,6 +4,7 @@ package com.example.elearningspringwithmongodb.features.category;
 import com.example.elearningspringwithmongodb.features.category.dto.CategoryCreateRequest;
 import com.example.elearningspringwithmongodb.features.category.dto.CategoryResponse;
 import com.example.elearningspringwithmongodb.features.category.dto.CategoryUpdateRequest;
+import com.example.elearningspringwithmongodb.features.category.dto.PopularCategoryResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -58,6 +59,11 @@ public class CategoryController {
     @PutMapping("/{categoryId}/disable")
     public void disableCategoryById(@PathVariable String categoryId){
         categoryService.disableCategoryById(categoryId);
+    }
+
+    @GetMapping("/popular")
+    public List<PopularCategoryResponse> getPopularCategory(){
+        return categoryService.getPopularCategory();
     }
 
 }

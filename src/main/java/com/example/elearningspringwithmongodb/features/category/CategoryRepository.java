@@ -14,4 +14,6 @@ public interface CategoryRepository extends MongoRepository<Category, String> {
 
     Optional<Category> findCategoryByNameEqualsIgnoreCase(String name);
 
+    List<Category> findAllByIsDeletedIsFalse();
+
 }

@@ -3,6 +3,7 @@ package com.example.elearningspringwithmongodb.features.category;
 import com.example.elearningspringwithmongodb.features.category.dto.CategoryCreateRequest;
 import com.example.elearningspringwithmongodb.features.category.dto.CategoryResponse;
 import com.example.elearningspringwithmongodb.features.category.dto.CategoryUpdateRequest;
+import com.example.elearningspringwithmongodb.features.category.dto.PopularCategoryResponse;
 
 import java.util.List;
 
@@ -21,5 +22,7 @@ public interface CategoryService {
     void enableCategoryById(String id);
 
     void disableCategoryById(String id);
+
+    List<PopularCategoryResponse> getPopularCategory();
 
 }

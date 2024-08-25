@@ -15,5 +15,7 @@ public interface CourseRepository extends MongoRepository<Course, String> {
 
     List<Course> findAllByIsDraftIsTrueAndIsDeletedIsFalse();
 
-    boolean existsById(String id);
+    List<Course> findAllByIsDraftIsFalseAndIsDeletedIsFalseAndPrice(Double price);
+
+    List<Course> findAllByCategoryNameAndIsDeletedFalse(String categoryName);
 }
